@@ -433,11 +433,13 @@ void changeBoardSize(int size){
 	boardSize = size;
 }
 
-void readData(struct Node* node, struct Player p1, struct Player p2){
+int readData(struct Node* node, struct Player p1, struct Player p2){
     FILE* file = fopen(fileName, "r"); /* should check the result */
     char line[256];
     int count = 1;
     int line_count = 0;
+    int x_count = 0;
+    int o_count = 0;
     while (fgets(line, sizeof(line), file)) {
     	line_count++;
         /* note that fgets don't strip the terminating \n, checking its
@@ -447,9 +449,10 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
     	
     	while(line[i] != '\n'){
     		i++;
+    		
 
     	}
-    	int r = 0;
+    	/*int r = 0;
     	while(line[r] != ' ' ){
     		p1.name[r] = line[r];
     		r++;
@@ -462,7 +465,7 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
     		r++;
     		s++;
     	}
-    	printf("\n%s _ %s _\n",p1.name,p2.name);
+    	printf("\n%s _ %s _\n",p1.name,p2.name);*/
     	changeBoardSize(line[4] - '0');
     	char string[i-2];
     	int k = 0;
@@ -471,8 +474,6 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
     		k++;
     	}
     	char str[i-2];
-    	p1.sign = 'x';
-    	p2.sign = 'o';
     	strncpy(str, string+6, sizeof(str));	
     	struct Node* head = NULL;
 	    for(int i=0;i<boardSize;i++){
@@ -494,6 +495,8 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
 	    printf("Game number %d:\n",count);
 	    printBoard(head);
 	    count++;
+
+	    
        
     }
     /* may check feof here to make a difference between eof and io failure -- network
@@ -527,6 +530,12 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
 
 	    	while(line[i] != '\n'){
 	    		i++;
+	    		if(line[i] == 'x'){
+					x_count++;
+				}
+				if(line[i] == 'o'){
+					o_count++;
+				}
 	    	}
 	    	changeBoardSize(line[4] - '0');
 	    	char string[i-2];
@@ -550,6 +559,12 @@ void readData(struct Node* node, struct Player p1, struct Player p2){
 		cpt++;
 	}
     fclose(file);
+    printf("%d %d",x_count,o_count);
+    if(x_count>o_count){
+	    	return 1;
+	    }else{
+	    	return 2;
+	    }
 }
 
 void saveData(struct Node* node, char name1[50], char name2[50]){
@@ -562,7 +577,7 @@ void saveData(struct Node* node, char name1[50], char name2[50]){
 	}
 	FILE* file = fopen(fileName, "a+");
 	struct Node* last;
-	fprintf(file,"%s %s %d;",name1, name2,boardSize);
+	fprintf(file,"    %d;",boardSize);
     while (node != NULL) {  
     	fprintf(file,"%d %d %c;",node->coord->x,node->coord->y,node->data);
     	/*putc((int)node->coord->y,file);
@@ -577,10 +592,22 @@ void saveData(struct Node* node, char name1[50], char name2[50]){
 	fclose(file);
 }
 
-void playMove(struct Node* head, struct Player p1, struct Player p2){
-    bool cpt = false; //false for p1, true for p2
+void playMove(struct Node* head, struct Player p1, struct Player p2,int who){
+    bool cpt; //false for p1, true for p2
+    if(who == 1){
+    	cpt = true;
+    }else{
+    	cpt = false;
+    }
     while(true){
 
+
+    	if(checkWin(head,p1) == 1 || checkWin(head,p1) == 2 || fullBoard(head)){
+    		if(!firstSaving){
+    			saveDuringGame();
+    		}
+    		break;
+    	}
 
     	char answer;
 		printf("Do you want to save the current game ? Yes(y) or No(n)");
@@ -590,16 +617,13 @@ void playMove(struct Node* head, struct Player p1, struct Player p2){
 			saveData(head,p1.name,p2.name);
 
 		}
-
-    	if(checkWin(head,p1) == 1 || checkWin(head,p1) == 2 || fullBoard(head)){
-    		break;
-    	}
     	struct Player p;
     	if(!cpt){
     		p = p1;
     	}else{
     		p = p2;
     	}
+    	printf("%c",p.sign);
     	int error = 0;
 	    error = makeMove(head,p);
 	    if(error ==1){
@@ -624,7 +648,7 @@ void playMove(struct Node* head, struct Player p1, struct Player p2){
 
 }
 
-void playGame(struct Node* head, bool b, struct Player p1, struct Player p2){
+void playGame(struct Node* head, bool b, struct Player p1, struct Player p2, int who){
 	if(!b){
 		printf("Enter Player 1 name:\n");
 		cleanStd();
@@ -681,8 +705,7 @@ void playGame(struct Node* head, bool b, struct Player p1, struct Player p2){
 
     /* Initialization */
     printBoard(head);
-    playMove(head,p1,p2);
-    saveData(head,p1.name,p2.name);
+    playMove(head,p1,p2,who);
 }
 
 
@@ -710,10 +733,15 @@ int main()
 		if(first == 'P' || first == 'p'){
 			changeParam();
 		}else if(first == 'S' || first == 's'){
-			playGame(head,false,p1,p2);
+			playGame(head,false,p1,p2,1);
 		}else if(first == 'R' || first == 'r'){
-			readData(head,p1,p2);
-			playGame(head,true,p1,p2);
+			p1.name[0] = '\0';
+			p2.name[0] = '\0';
+			p1.sign = 'x';
+			p2.sign = 'o';
+			
+			int who_play = readData(head,p1,p2);
+			playGame(head,true,p1,p2, who_play);
 		}else{
 			printf("Something went wrong, please retry.\n");
 		}
