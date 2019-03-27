@@ -4,14 +4,6 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-#define RED   "\x1B[31m"
-#define GRN   "\x1B[32m"
-#define YEL   "\x1B[33m"
-#define BLU   "\x1B[34m"
-#define MAG   "\x1B[35m"
-#define CYN   "\x1B[36m"
-#define WHT   "\x1B[37m"
-#define RESET "\x1B[0m"
 
 int boardSize = 3;
 char const* const fileName = "data.txt";
@@ -34,11 +26,6 @@ typedef struct Player{
 	char sign;
 
 } Player;
-
-typedef struct Game{
-	struct Node* board[8];
-
-} Game;
 
 
 void saveDuringGame(){
@@ -153,59 +140,7 @@ struct Node* initialization(){
     return head;
 }  
   
-/* Given a node as next_node, insert a new node before the given node 
-void insertBefore(struct Node** head_ref, struct Node* next_node, struct Coord* coord)  
-{  
-    1. check if the given next_node is NULL 
-    if (next_node == NULL) {  
-        printf("the given next node cannot be NULL");  
-        return;  
-    }  
-  
-     2. allocate new node 
-    struct Node* new_node = malloc(sizeof(struct Node));
-    struct Coord* c = malloc(sizeof(struct Coord));  
-    c = coord;  
-  
-     3. put in the data 
-    new_node->coord = c;  
-  
-    4. Make prev of new node as prev of next_node 
-    new_node->prev = next_node->prev;  
-  
-    . Make the prev of next_node as new_node 
-    next_node->prev = new_node;  
-  
-     6. Make next_node as next of new_node 
-    new_node->next = next_node;  
-  
-    7. Change next of new_node's previous node 
-    if (new_node->prev != NULL)  
-        new_node->prev->next = new_node;  
-     8. If the prev of new_node is NULL, it will be 
-       the new head node 
-    else
-        (*head_ref) = new_node; 
-      
-} */ 
-  
-// This function prints contents of linked list starting from the given node  
-void printList(struct Node* node)  
-{  
-    struct Node* last;  
-    printf("\nTraversal in forward direction \n");  
-    while (node != NULL) {  
-        printf("x= %d ", node->coord->x);
-        printf("y= %d\n", node->coord->y);  
-        last = node;  
-        node = node->next;  
-    }   
-    while (last != NULL) {  
-        /*printf("x= %d ", node->coord->x);
-        printf("y= %d\n ", node->coord->y);   */
-        last = last->prev;  
-    }  
-}  
+ 
 
 void printBoard(struct Node* node)
 {
@@ -442,8 +377,6 @@ int readData(struct Node* node, struct Player p1, struct Player p2){
     int o_count = 0;
     while (fgets(line, sizeof(line), file)) {
     	line_count++;
-        /* note that fgets don't strip the terminating \n, checking its
-           presence would allow to handle lines longer that sizeof(line) */
     	int i = 0;
     	//IMPORTANT check if line[3] == ';' to be sure if it's a new line.
     	
@@ -452,20 +385,6 @@ int readData(struct Node* node, struct Player p1, struct Player p2){
     		
 
     	}
-    	/*int r = 0;
-    	while(line[r] != ' ' ){
-    		p1.name[r] = line[r];
-    		r++;
-    	}
-    	int s = 0;
-    	r++;
-    	while(line[r] != ' '){
-    		printf("%d",s);
-    		p2.name[s] = line[r];
-    		r++;
-    		s++;
-    	}
-    	printf("\n%s _ %s _\n",p1.name,p2.name);*/
     	changeBoardSize(line[4] - '0');
     	char string[i-2];
     	int k = 0;
@@ -580,8 +499,6 @@ void saveData(struct Node* node, char name1[50], char name2[50]){
 	fprintf(file,"    %d;",boardSize);
     while (node != NULL) {  
     	fprintf(file,"%d %d %c;",node->coord->x,node->coord->y,node->data);
-    	/*putc((int)node->coord->y,file);
-    	putc((int)node->data,file);*/
         last = node;  
         node = node->next;  
     }   
@@ -694,14 +611,6 @@ void playGame(struct Node* head, bool b, struct Player p1, struct Player p2, int
 
     printf("%s:%c - %s:%c \n",p1.name,p1.sign,p2.name,p2.sign);
 
-    /*printf(" -----------\n");
-    printf("| "RED"x"RESET" | x | x |\n");
-    printf(" -----------\n");
-    printf("| x | x | x |\n");
-    printf(" -----------\n");
-    printf("| x | x | x |\n");
-    printf(" -----------\n");*/
-
 
     /* Initialization */
     printBoard(head);
@@ -713,18 +622,10 @@ void playGame(struct Node* head, bool b, struct Player p1, struct Player p2, int
 int main()
 {
 	
-    /*for(int i=0;i<boardSize;i++){
-    	for(int j=0;j<boardSize;j++){
-    		struct Coord* c = malloc(sizeof(struct Coord));
-    		c->x = i;
-    		c->y = j;
-    		push(&head, c);
-    	}
-    }*/
+
 	struct Node* head = initialization();
 	Player p1;
 	Player p2;
-	/*printBoard(head);*/
 	while(true){
 		printf("Welcome to the Tic Tac Toe Game.\nTo start the game please press (S). To replay a game, please press (R). To change the parameters, please press (P).\n");
 		char first;
